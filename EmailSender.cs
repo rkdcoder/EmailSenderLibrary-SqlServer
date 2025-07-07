@@ -55,9 +55,24 @@ namespace EmailSenderLibrary
                         client.Credentials = new NetworkCredential(smtpUser.Value, pass);
                     }
 
-                    using (var mail = new MailMessage(from.Value, to.Value, subject.Value, body.Value))
+                    using (var mail = new MailMessage())
                     {
+                        mail.From = new MailAddress(from.Value);
+
+                        foreach (var address in to.Value
+                            .Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            var trimmed = address.Trim();
+                            if (!string.IsNullOrEmpty(trimmed))
+                            {
+                                mail.To.Add(trimmed);
+                            }
+                        }
+
+                        mail.Subject = subject.Value;
+                        mail.Body = body.Value;
                         mail.IsBodyHtml = true;
+
                         client.Send(mail);
                         result.Success = true;
                         result.Message = "Email sent successfully.";
